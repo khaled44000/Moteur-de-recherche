@@ -10,112 +10,68 @@ using System.Web.UI.WebControls;
 /// </summary>
 public class Redis
 {
+    public int Index { get; set; }
+    public string strKeyUrl { get; set; }
+    public string Url { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+
+    /// <summary>
+    /// Connexion redis
+    /// </summary>
+    /// <returns></returns>
     public static ConnectionMultiplexer connectionRedis()
     {
         /* ("127.0.0.1") */
-        ConnectionMultiplexer redisConn = ConnectionMultiplexer.Connect("localhost,allowAdmin=true");
+        ConnectionMultiplexer redisConn = ConnectionMultiplexer.Connect("localhost,allowAdmin=true, abortConnect = false");
         return redisConn;
     }
 
+    /// <summary>
+    /// Sauvegarder les urls dans queue redis
+    /// </summary>
+    /// <param name="strUrl"></param>
     public static void saveUrlQueue(string strUrl)
     {
+        // Générer key Guid
         Guid keyGuidUrl = Guid.NewGuid();
+        // connexion redis
         ConnectionMultiplexer redisConn = connectionRedis();
-        //get your db
+
+        //get  db
         IDatabase redDb = redisConn.GetDatabase();
+
+        // sauvegarder url en redis avec StringSet
         redDb.StringSet(keyGuidUrl.ToString(), strUrl);
     }
 
+
+    /// <summary>
+    /// recuperer les url dans le queue redis
+    /// </summary>
     public static void getUrlQueue()
     {
         List<string> lstUrlQueue = new List<string>();
+        // connexion redis
         ConnectionMultiplexer redisConn = connectionRedis();
-        //get your db
+        //get db
         IDatabase redDb = redisConn.GetDatabase();
+        // get serverur 
         IServer server = redisConn.GetServer("localhost", 6379);
-        foreach (var key in server.Keys().OrderBy(o => o.ToString()))
+        foreach (var key in server.Keys().OrderBy(o => o.ToString())) // extraire tous les keys 
         {
             RedisKey k = key;
-            string strKey = k.ToString();
-            string strUrl = redDb.StringGet(k);
+            string strKey = k.ToString(); // get keys
+            string strUrl = redDb.StringGet(k); // get value url
+            // supprimé les url dans qui sont dans le queue
             redDb.KeyDelete(k);
+            // sauvegarder a nouveau les url avec leurs meto info
             Utils.saveMetaDataFromUrl(strUrl);
         }
     }
 
-    public static List<string> getMetaData()
-    {
-        List<string> lstUrlQueue = new List<string>();
-        ConnectionMultiplexer redisConn = connectionRedis();
-        //get your db
-        IDatabase redDb = redisConn.GetDatabase();
-        IServer server = redisConn.GetServer("localhost", 6379);
-        foreach (var key in server.Keys().OrderBy(o => o.ToString()))
-        {
-            try
-            {
-                RedisKey k = key;
-                string strKey = k.ToString();
-                if (redDb.StringGet(k).ToString() != null)
-                {
-                    string strUrl = redDb.StringGet(k).ToString();
-                    lstUrlQueue.Add(strUrl);
-                }
-            }
-            catch
-            { }
-
-        }
-        return lstUrlQueue;
-    }
-
-    public static List<Tuple<string, string>> SaveBigData(GridView gvListUrl)
-    {
-        bool isSave = false;
-        List<Tuple<string, string>> lstRedis = new List<Tuple<string, string>>();
-
-        /* ("127.0.0.1") */
-        ConnectionMultiplexer redisConn = ConnectionMultiplexer.Connect("localhost,allowAdmin=true");
-
-        IServer server = redisConn.GetServer("localhost", 6379);
-        server.FlushDatabase();
-        //get your db
-        IDatabase redDb = redisConn.GetDatabase();
-
-
-        foreach (GridViewRow row in gvListUrl.Rows)
-        {
-            if (row.RowType == DataControlRowType.DataRow)
-            {
-                for (int i = 1; i < gvListUrl.Columns.Count; i++)
-                {
-                    String strIndex = "url" + row.Cells[1].Text;
-                    String strIndexTitre = "Titre" + row.Cells[1].Text;
-                    String strIndexDesc = "Desc" + row.Cells[1].Text;
-                    String strUrl = row.Cells[2].Text + " Titre" + row.Cells[3].Text + " Desc" + row.Cells[4].Text;
-                    redDb.StringSet(strIndex, strUrl);
-                   /* string titre = row.Cells[3].Text;
-                    string desc = row.Cells[4].Text;
-                   
-                   redDb.StringSet(strIndexTitre, titre);
-                    redDb.StringSet(strIndexDesc, desc);*/
-
-
-
-                }
-            }
-        }
-     
-        foreach (var key in server.Keys().OrderBy(o=> o.ToString()))
-        {
-           RedisKey k = key;
-            string strKey = k.ToString();
-            string value = redDb.StringGet(k);
-            lstRedis.Add(new Tuple<string, string>(strKey, value));
-        }
-
-        return lstRedis;
-    }
+ 
+   
 
     public static void SaveMetaDataFromUrl(Utils metaInfo)
     {
@@ -124,32 +80,45 @@ public class Redis
         ConnectionMultiplexer redisConn = connectionRedis();
         //get your db
         IDatabase redDb = redisConn.GetDatabase();
-       // redDb.StringSet(keyGuidUrl.ToString(), metaInfo);
-        
+     
+        // sauvegadre list object meta info url dans redis
         redDb.HashSet(keyGuidUrl.ToString(), new HashEntry[] { new HashEntry("Url", metaInfo.Url), new HashEntry("Title" , metaInfo.Title), new HashEntry("Description", metaInfo.Description) });
         
     }
 
-    public static List<Tuple<string, string>> GetMetaDataFromUrl()
+
+    /// <summary>
+    /// recupérer les meta info url dans redis
+    /// </summary>
+    /// <returns></returns>
+    public static List<object> GetMetaDataFromUrl()
     {
-        List<Tuple<string, string>> lstRedis = new List<Tuple<string, string>>();
+        List<object> lstObjetRedis = new List<object>();
         ConnectionMultiplexer redisConn = connectionRedis();
         //get your db
         IDatabase redDb = redisConn.GetDatabase();
         IServer server = redisConn.GetServer("localhost", 6379);
+        int index = 0;
         foreach (var key in server.Keys().OrderBy(o => o.ToString()))
         {
+            index++;
+            Redis lstRedis = new Redis();
             RedisKey k = key;
             string strKey = k.ToString();
             string strUrl = redDb.HashGet(strKey , "Url");
             string strTitle = redDb.HashGet(strKey , "Title");
             string strDescription = redDb.HashGet(strKey , "Description");
+            lstRedis.Index = index;
+            lstRedis.strKeyUrl = strKey;
+            lstRedis.Url = strUrl;
+            lstRedis.Title = strTitle;
+            lstRedis.Description = strDescription;
 
-          //  string stUrl = infoUrl.Split('#')[0].ToString();
+            lstObjetRedis.Add(lstRedis);
         }
 
-
-        return lstRedis;
+        return lstObjetRedis;
+        
     }
 
 }

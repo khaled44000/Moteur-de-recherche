@@ -9,6 +9,7 @@
     <link href="~/css/bootstrap.css" rel="stylesheet" />
     <link href="~/css/style.css" rel="stylesheet" />
 
+
     <link href="~/css/fontello.css" type="text/css" rel="stylesheet" />
     <!--[if lt IE 7]>
     <link href="css/fontello-ie7.css" type="text/css" rel="stylesheet">  
@@ -34,7 +35,7 @@
 </head>
 <body>
     <form id="form1" runat="server">
-
+        <asp:ScriptManager ID="ScriptManager1" runat="server" />
         <div class="navbar-wrapper">
             <div class="navbar navbar-inverse navbar-fixed-top">
                 <div class="navbar-inner">
@@ -64,8 +65,9 @@
         <div id="headerwrap">
             <header class="clearfix">
                 <h1><span>Go Recherche!
-                    <br />
-                </span>Nous faisons du recherche à un endroit magnifique</h1>
+                    <br /></span>
+
+                </h1>
                 <div class="container">
                     <div class="row">
                         <div class="span12">
@@ -83,73 +85,20 @@
         <hr />
         <section id="portfolio" class="single-page scrollblock">
             <div class="container">
-                <h1 id="folio-headline">Resultats ...</h1>
-                <asp:Label runat="server" ID="lblResulat"></asp:Label>
-                <asp:GridView ID="gvListUrlParents" AutoGenerateColumns="false" runat="server" CssClass="GridView"
-                    DataKeyNames="Url" OnRowDataBound="OnRowDataBound_gvListUrlParents">
-
+                <asp:GridView ID="gvListUrlRedis" AutoGenerateColumns="false" runat="server" CssClass="GridView"
+                    DataKeyNames="Index">
                     <Columns>
-                        <asp:TemplateField>
-                            <ItemTemplate>
-                                <img alt="" style="cursor: pointer" src="../img/plus.png" />
-                                <asp:Panel ID="pnlOrders" runat="server" Style="display: none">
-                                    <asp:GridView ID="gvListUrlFils" runat="server" AutoGenerateColumns="false" CssClass="GridView" ClientIDMode="Static">
-                                        <Columns>
-                                            <asp:BoundField DataField="Index" HeaderText="Index" />
-                                            <asp:BoundField DataField="Url" HeaderText="Url" HtmlEncode="False" DataFormatString="<a target='_blank' href='{0}'>{0}</a>" />
-                                            <asp:BoundField DataField="Title" HeaderText="Titre" HtmlEncode="False"/>
-                                            <asp:BoundField DataField="Description" HeaderText="Description" HtmlEncode="False"/>
-                                        </Columns>
-                                    </asp:GridView>
-                                </asp:Panel>
-                            </ItemTemplate>
-                        </asp:TemplateField>
                         <asp:BoundField DataField="Index" HeaderText="Index" />
                         <asp:BoundField DataField="Url" HeaderText="Url" HtmlEncode="False" DataFormatString="<a target='_blank' href='{0}'>{0}</a>" />
-                        <asp:BoundField DataField="Title" HeaderText="Titre" HtmlEncode="False"/>
-                        <asp:BoundField DataField="Description" HeaderText="Description" HtmlEncode="False"/>
+                        <asp:BoundField DataField="Title" HeaderText="Titre" HtmlEncode="False" />
+                        <asp:BoundField DataField="Description" HeaderText="Description" HtmlEncode="False" />
                     </Columns>
                     <AlternatingRowStyle BackColor="#f0bf00" />
                 </asp:GridView>
             </div>
         </section>
-        <hr />
-        <section id="testimonials" class="single-page hidden-phone">
-            <div class="container">
-                <div class="row">
-                    <div class="blockquote-wrapper">
-                        <blockquote class="mega">
-                            <div class="span4">
-                                <p class="cite">Redis</p>
-                                <asp:Table ID="tblRedsis" runat="server" Width="100%">
-                                    <asp:TableRow>
-                                        <asp:TableCell>
-                                            <asp:TextBox ID="txtLogin" placeholder="Login" runat="server" class="form-control input-lg cform-submit" size="40" Height="60" Width="100%"></asp:TextBox>
-                                        </asp:TableCell>
-                                    </asp:TableRow>
-                                    <asp:TableRow>
-                                        <asp:TableCell>
-                                            <asp:TextBox ID="txtPassword" placeholder="Password" runat="server" TextMode="Password"  class="form-control input-lg cform-submit" size="40" Height="60" Width="100%"></asp:TextBox>
-                                        </asp:TableCell>
-                                    </asp:TableRow>
-                                    <asp:TableRow>
-                                        <asp:TableCell>
-                                             <input type="submit" value="Se connecter" onserverclick="OnClick_Connexion" name="Connecter" runat="server" class=" cform-submit" />
-                                        </asp:TableCell>
-                                    </asp:TableRow>
-                                </asp:Table>
-                                <asp:Panel runat="server" ID="pnlDataRedis" Visible="false" >
+       
 
-                                    <asp:Label ID="lblRedis" runat="server"></asp:Label>
-                                </asp:Panel>
-                            </div>
-
-                        </blockquote>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <hr />
         <div class="footer-wrapper">
             <div class="container">
                 <footer><small>&copy; 2018 Go Recherche</small> </footer>
@@ -159,18 +108,7 @@
         <script src="~/content/jquery.prettyPhoto.js"></script>
         <script src="~/content/site.js"></script>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-        <script type="text/javascript">
-            $("[src*=plus]").live("click", function () {
-                $(this).closest("tr").after("<tr><td></td><td colspan = '999'>" + $(this).next().html() + "</td></tr>")
-                $(this).attr("src", "../img/minus.png");
-            });
-            $("[src*=minus]").live("click", function () {
-                $(this).attr("src", "../img/plus.png");
-                $(this).closest("tr").next().remove();
-            });
 
-
-        </script>
     </form>
 </body>
 </html>

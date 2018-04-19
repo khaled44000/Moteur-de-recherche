@@ -7,37 +7,32 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Web;
 using StackExchange.Redis;
+using System.Web.Configuration;
 
 /// <summary>
 /// Description résumée de Utils
 /// </summary>
 public class Utils
 {
-
-    public int Index { get; set; }
+   
     public string Url { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
-  //  public string Keywords { get; set; }
-  //  public string ImageUrl { get; set; }
-  //  public string SiteName { get; set; }
 
-    public Utils(string url , int intIndex)
+    public Utils(string url)
     {
-        Index = intIndex;
         Url = url;
- 
     }
 
-    
-
+    /// <summary>
+    /// Get meta data from url and save data in redis
+    /// </summary>
+    /// <param name="strUrl">url</param>
     public static void saveMetaDataFromUrl(string strUrl)
     {
         try
         {
-            
-            Utils metaInfo = new Utils(strUrl, 0);
-            string MetaDataFromUrl = string.Empty;
+            Utils metaInfo = new Utils(strUrl);
             HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(new Uri(strUrl));
             request.Method = WebRequestMethods.Http.Get;
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -48,16 +43,15 @@ public class Utils
             response.Close();
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(responseString);
-           metaInfo.Index = 0;
-           metaInfo.Url = strUrl;
+            metaInfo.Url = strUrl;
             String title = (from x in doc.DocumentNode.Descendants()
                             where x.Name.ToLower() == "title"
                             select x.InnerText).FirstOrDefault();
-            if(title == null || title == string.Empty)
+            if (title == null || title == string.Empty)
             {
                 title = "Pas Titre";
             }
-           metaInfo.Title = title;
+            metaInfo.Title = title;
             String desc = (from x in doc.DocumentNode.Descendants()
                            where x.Name.ToLower() == "meta"
                            && x.Attributes["name"] != null
@@ -68,7 +62,6 @@ public class Utils
                 desc = "Pas Description";
             }
             metaInfo.Description = desc;
-            MetaDataFromUrl = strUrl + " # " + title + " # " + desc;
             Redis.SaveMetaDataFromUrl(metaInfo);
         }
         catch
@@ -78,11 +71,15 @@ public class Utils
 
     }
 
-  
-
+    /// <summary>
+    /// save url in redis queue
+    /// </summary>
+    /// <param name="strUrl"></param>
+    /// <param name="lstUrl"></param>
     public static void SaveUrlQueue(string strUrl , List<string>  lstUrl)
     {
-        if (lstUrl.Count >= 3)
+        int NbreMax = int.Parse(WebConfigurationManager.AppSettings["NbreMax"]);
+        if (lstUrl.Count >= NbreMax)
         {
             // arrêter 
         }
@@ -103,7 +100,7 @@ public class Utils
                 foreach (HtmlNode _HtmlNode in _HtmlNodeCollection)
                 {
                     i++;
-                    if (i == 3)
+                    if (i == NbreMax)
                     {
                         break;
                     }
@@ -116,7 +113,8 @@ public class Utils
                         {
                             try
                             {
-                                docFils = hw.Load(strLink);
+                               
+                                docFils = hw.Load(strLink);  // vérifier l'url si connecté
                                 strUrlFinal = strLink;
                                 if (!lstUrl.Contains(strLink))
                                 {
@@ -187,40 +185,4 @@ public class Utils
         }
     }
 
-
-
-    public static Utils GetMetaDataFromUrl(string strUrl, int intIndex)
-    {
-
-        Utils metaInfo = new Utils(strUrl, intIndex);
-        try
-        {
-            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(new Uri(strUrl));
-            request.Method = WebRequestMethods.Http.Get;
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            StreamReader reader = new StreamReader(response.GetResponseStream());
-
-            String responseString = reader.ReadToEnd();
-
-            response.Close();
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(responseString);
-            metaInfo.Index = intIndex;
-            String title = (from x in doc.DocumentNode.Descendants()
-                            where x.Name.ToLower() == "title"
-                            select x.InnerText).FirstOrDefault();
-            metaInfo.Title = title;
-            String desc = (from x in doc.DocumentNode.Descendants()
-                           where x.Name.ToLower() == "meta"
-                           && x.Attributes["name"] != null
-                           && x.Attributes["name"].Value.ToLower() == "description"
-                           select x.Attributes["content"].Value).FirstOrDefault();
-            metaInfo.Description = desc;
-        }
-        catch
-        {
-            // error serveur 
-        }
-        return metaInfo;
-    }
 }
