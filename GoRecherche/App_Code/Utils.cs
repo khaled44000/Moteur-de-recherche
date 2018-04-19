@@ -10,11 +10,12 @@ using StackExchange.Redis;
 using System.Web.Configuration;
 
 /// <summary>
-/// Description résumée de Utils
+/// public static void saveMetaDataFromUrl(string strUrl)
+/// public static void SaveUrlQueue(List<string> lstUrlGlobal)
 /// </summary>
 public class Utils
 {
-   
+
     public string Url { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
@@ -42,6 +43,7 @@ public class Utils
 
             response.Close();
             HtmlDocument doc = new HtmlDocument();
+            // load html document from url
             doc.LoadHtml(responseString);
             metaInfo.Url = strUrl;
             String title = (from x in doc.DocumentNode.Descendants()
@@ -62,6 +64,7 @@ public class Utils
                 desc = "Pas Description";
             }
             metaInfo.Description = desc;
+            // sauvegarde meta info url dans redis
             Redis.SaveMetaDataFromUrl(metaInfo);
         }
         catch
@@ -76,112 +79,117 @@ public class Utils
     /// </summary>
     /// <param name="strUrl"></param>
     /// <param name="lstUrl"></param>
-    public static void SaveUrlQueue(string strUrl , List<string>  lstUrl)
+    public static void SaveUrlQueue(List<string> lstUrlGlobal)
     {
         int NbreMax = int.Parse(WebConfigurationManager.AppSettings["NbreMax"]);
-        if (lstUrl.Count >= NbreMax)
+        List<string> lstUrl = new List<string>();
+        if (lstUrlGlobal.Count >= NbreMax)
         {
             // arrêter 
         }
         else
         {
-            if (!lstUrl.Contains(strUrl))
+            foreach (string strUrl in lstUrlGlobal)
             {
-                lstUrl.Add(strUrl);
-                Redis.saveUrlQueue(strUrl);
-            }
-
-            HtmlWeb hw = new HtmlWeb();
-            HtmlDocument docParent = hw.Load(strUrl);
-            HtmlNodeCollection _HtmlNodeCollection = docParent.DocumentNode.SelectNodes("//a[@href]");
-            if (_HtmlNodeCollection != null)
-            {
-                int i = 0;
-                foreach (HtmlNode _HtmlNode in _HtmlNodeCollection)
+                if (!lstUrl.Contains(strUrl))
                 {
-                    i++;
-                    if (i == NbreMax)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        String strLink = _HtmlNode.Attributes["href"].Value.ToString();
-                        HtmlDocument docFils = new HtmlDocument();
-                        String strUrlFinal = string.Empty;
-                        if (strLink.StartsWith("https") || strLink.StartsWith("http"))
-                        {
-                            try
-                            {
-                               
-                                docFils = hw.Load(strLink);  // vérifier l'url si connecté
-                                strUrlFinal = strLink;
-                                if (!lstUrl.Contains(strLink))
-                                {
-                                    lstUrl.Add(strLink);
-                                    Redis.saveUrlQueue(strLink);
-                                    SaveUrlQueue(strLink, lstUrl);
-                                }
-                            }
-                            catch
-                            {
-                                // url non connecté
-                            }
-                        }
-                        else if (strLink.StartsWith("//"))
-                        {
+                    lstUrl.Add(strUrl);
+                    Redis.saveUrlQueue(strUrl);
+                }
 
-                            try
-                            {
-                                // Vérifier Url
-                                String strUrlhttps = "https:" + strLink;
-                                docFils = hw.Load(strUrlhttps);
-                                strUrlFinal = strUrlhttps;
-                            }
-                            catch
-                            {
-                                String strUrlhttp = "http:" + strLink;
-                                docFils = hw.Load(strUrlhttp);
-                                strUrlFinal = strUrlhttp;
-                            }
-                            if (!lstUrl.Contains(strUrlFinal))
-                                lstUrl.Add(strUrlFinal);
+                HtmlWeb hw = new HtmlWeb();
+                // get html documents from page web
+                HtmlDocument docParent = hw.Load(strUrl);
+                // get list link 
+                HtmlNodeCollection _HtmlNodeCollection = docParent.DocumentNode.SelectNodes("//a[@href]");
+                if (_HtmlNodeCollection != null)
+                {
+                    int i = 0;
+                    foreach (HtmlNode _HtmlNode in _HtmlNodeCollection)
+                    {
+                        i++;
+                        if (i == NbreMax)
+                        {
+                            break;
                         }
                         else
                         {
-                            try
-                            {
-                                string strUrlPage = lstUrl + "/" + strLink;
-                                docFils = hw.Load(strUrlPage);
-                                if (!lstUrl.Contains(strUrlPage))
-                                {
-                                    lstUrl.Add(strUrlPage);
-                                    Redis.saveUrlQueue(strUrlPage);
-                                    SaveUrlQueue(strLink, lstUrl);
-                                }
-                            }
-                            catch
+                            String strLink = _HtmlNode.Attributes["href"].Value.ToString();
+                            HtmlDocument docFils = new HtmlDocument();
+                            String strUrlFinal = string.Empty;
+                            if (strLink.StartsWith("https") || strLink.StartsWith("http"))
                             {
                                 try
                                 {
-                                    string strUrlPage = lstUrl + "//" + strLink;
+
+                                    docFils = hw.Load(strLink);  // vérifier l'url si connecté
+                                    strUrlFinal = strLink;
+                                    if (!lstUrl.Contains(strLink))
+                                    {
+                                        lstUrl.Add(strLink);
+                                        Redis.saveUrlQueue(strLink);
+                                    }
+                                }
+                                catch
+                                {
+                                    // url non connecté
+                                }
+                            }
+                            else if (strLink.StartsWith("//"))
+                            {
+
+                                try
+                                {
+                                    // Vérifier Url
+                                    String strUrlhttps = "https:" + strLink;
+                                    docFils = hw.Load(strUrlhttps);
+                                    strUrlFinal = strUrlhttps;
+                                }
+                                catch
+                                {
+                                    String strUrlhttp = "http:" + strLink;
+                                    docFils = hw.Load(strUrlhttp);
+                                    strUrlFinal = strUrlhttp;
+                                }
+                                if (!lstUrl.Contains(strUrlFinal))
+                                    lstUrl.Add(strUrlFinal);
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    string strUrlPage = lstUrl + "/" + strLink;
                                     docFils = hw.Load(strUrlPage);
                                     if (!lstUrl.Contains(strUrlPage))
                                     {
                                         lstUrl.Add(strUrlPage);
                                         Redis.saveUrlQueue(strUrlPage);
-                                        SaveUrlQueue(strLink, lstUrl);
                                     }
                                 }
                                 catch
                                 {
-                                    // url non valide
+                                    try
+                                    {
+                                        string strUrlPage = lstUrl + "//" + strLink;
+                                        docFils = hw.Load(strUrlPage);
+                                        if (!lstUrl.Contains(strUrlPage))
+                                        {
+                                            lstUrl.Add(strUrlPage);
+                                            Redis.saveUrlQueue(strUrlPage);
+                                            
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        // url non valide
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+            SaveUrlQueue(lstUrl);
         }
     }
 

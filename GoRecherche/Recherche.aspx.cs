@@ -53,11 +53,13 @@ public partial class _Default : Page
         server.FlushDatabase();
 
         // sauvegarder les url dans queue redis
-        Utils.SaveUrlQueue(strUrl, new List<string>());
+        List<string> lstUrl = new List<string>();
+        lstUrl.Add(strUrl);
+        Utils.SaveUrlQueue(lstUrl);
         // récuperer les url qui sont été stockées dans queue redis
         Redis.getUrlQueue();
         // afficher les données apres la sauvegrde des meta informations url dans redis
-        List<object> lstObjetRedis = Redis.GetMetaDataFromUrl();
+        List<Redis> lstObjetRedis = Redis.GetMetaDataFromUrl();
 
         gvListUrlRedis.DataSource = lstObjetRedis;
         gvListUrlRedis.DataBind();

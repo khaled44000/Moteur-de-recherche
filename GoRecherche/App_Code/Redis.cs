@@ -73,6 +73,10 @@ public class Redis
  
    
 
+    /// <summary>
+    /// sauvegarder les meta info url dans redis
+    /// </summary>
+    /// <param name="metaInfo"></param>
     public static void SaveMetaDataFromUrl(Utils metaInfo)
     {
         List<Tuple<string, string>> lstRedis = new List<Tuple<string, string>>();
@@ -91,9 +95,9 @@ public class Redis
     /// recupérer les meta info url dans redis
     /// </summary>
     /// <returns></returns>
-    public static List<object> GetMetaDataFromUrl()
+    public static List<Redis> GetMetaDataFromUrl()
     {
-        List<object> lstObjetRedis = new List<object>();
+        List<Redis> lstObjetRedis = new List<Redis>();
         ConnectionMultiplexer redisConn = connectionRedis();
         //get your db
         IDatabase redDb = redisConn.GetDatabase();
