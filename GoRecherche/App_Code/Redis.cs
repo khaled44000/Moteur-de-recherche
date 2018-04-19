@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using System.Web.UI.WebControls;
 
 /// <summary>
 /// Description résumée de Redis
@@ -23,7 +21,7 @@ public class Redis
     public static ConnectionMultiplexer connectionRedis()
     {
         /* ("127.0.0.1") */
-        ConnectionMultiplexer redisConn = ConnectionMultiplexer.Connect("localhost,allowAdmin=true, abortConnect = false");
+        ConnectionMultiplexer redisConn = ConnectionMultiplexer.Connect("localhost,allowAdmin=true, abortConnect =false");
         return redisConn;
     }
 

@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text.RegularExpressions;
-using System.Web;
-using StackExchange.Redis;
 using System.Web.Configuration;
 
 /// <summary>
@@ -46,19 +43,23 @@ public class Utils
             // load html document from url
             doc.LoadHtml(responseString);
             metaInfo.Url = strUrl;
+
             String title = (from x in doc.DocumentNode.Descendants()
                             where x.Name.ToLower() == "title"
                             select x.InnerText).FirstOrDefault();
+
             if (title == null || title == string.Empty)
             {
                 title = "Pas Titre";
             }
             metaInfo.Title = title;
+
             String desc = (from x in doc.DocumentNode.Descendants()
                            where x.Name.ToLower() == "meta"
                            && x.Attributes["name"] != null
                            && x.Attributes["name"].Value.ToLower() == "description"
                            select x.Attributes["content"].Value).FirstOrDefault();
+
             if (desc == null || desc == string.Empty)
             {
                 desc = "Pas Description";
@@ -78,7 +79,7 @@ public class Utils
     /// save url in redis queue
     /// </summary>
     /// <param name="strUrl"></param>
-    /// <param name="lstUrl"></param>
+    /// <param name="lstUrlGlobal"></param>
     public static void SaveUrlQueue(List<string> lstUrlGlobal)
     {
         int NbreMax = int.Parse(WebConfigurationManager.AppSettings["NbreMax"]);
