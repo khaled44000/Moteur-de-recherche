@@ -44,9 +44,9 @@ public class Utils
             doc.LoadHtml(responseString);
             metaInfo.Url = strUrl;
 
-            String title = (from x in doc.DocumentNode.Descendants()
-                            where x.Name.ToLower() == "title"
-                            select x.InnerText).FirstOrDefault();
+            String title = (from HtmlNode in doc.DocumentNode.Descendants()
+                            where HtmlNode.Name.ToLower() == "title"
+                            select HtmlNode.InnerText).FirstOrDefault();
 
             if (title == null || title == string.Empty)
             {
@@ -54,11 +54,11 @@ public class Utils
             }
             metaInfo.Title = title;
 
-            String desc = (from x in doc.DocumentNode.Descendants()
-                           where x.Name.ToLower() == "meta"
-                           && x.Attributes["name"] != null
-                           && x.Attributes["name"].Value.ToLower() == "description"
-                           select x.Attributes["content"].Value).FirstOrDefault();
+            String desc = (from HtmlNode in doc.DocumentNode.Descendants()
+                           where HtmlNode.Name.ToLower() == "meta"
+                           && HtmlNode.Attributes["name"] != null
+                           && HtmlNode.Attributes["name"].Value.ToLower() == "description"
+                           select HtmlNode.Attributes["content"].Value).FirstOrDefault();
 
             if (desc == null || desc == string.Empty)
             {
