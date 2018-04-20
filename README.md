@@ -6,7 +6,7 @@ de chaque URL puis enregistrées a nouveau dans une liste d'objets (key, Titre, 
 
 
 ## Installation
-- Pour commencer il nous faut visual studio community 2017 vous pouevz le télécharger via le lien suivant https://www.visualstudio.com/fr/downloads/?rr=https%3A%2F%2Fwww.google.fr%2F
+- Pour commencer il nous faut visual studio community 2017 vous pouvez le télécharger via le lien suivant https://www.visualstudio.com/fr/downloads/?rr=https%3A%2F%2Fwww.google.fr%2F
 - Création d'un nouveau projet web ASP.net vide sur visual studio 
 - Installer HtmlAgilityPack 1.8.0 via le console de du gestionnaire de package visual studio on exécutant cette commande " Install-Package HtmlAgilityPack -Version 1.8.0"
 https://www.nuget.org/packages/HtmlAgilityPack/ et le toturiel http://html-agility-pack.net/ 
@@ -17,8 +17,8 @@ https://chrisbitting.com/2014/04/14/how-to-install-redis-on-windows-and-get-star
 
 ## Usage
 
-- Créer le font comme dans page "Recherche.aspx"
-- Céer une class Utils.cs et importer les modules suivantes:
+- Créer le front comme dans page "Recherche.aspx"
+- Créer une class Utils.cs et importer les modules suivantes:
  
 using HtmlAgilityPack;  
 using System;  
@@ -32,7 +32,7 @@ using System.Web.Configuration;
 les enregister dans le redis (queue)  
 - La saveMetaDataFromUrl(string strUrl) permet d'extraire les meta inforations (Titre , description ....)  de chaque url via HtmlAgilityPack et les sauvegarder dans redis (set)  
  
- - Céer une class Redis.cs et importer les modules suivantes:
+ - Créer une class Redis.cs et importer les modules suivantes:
 using StackExchange.Redis;  
 using System;  
 using System.Collections.Generic;  
